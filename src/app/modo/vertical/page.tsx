@@ -1,5 +1,11 @@
+import VerticalPage from '@/programs/vertical/page'
+
 const Page = () => {
-  return <div>Enter</div>
+  return (
+    <div>
+      <VerticalPage />
+    </div>
+  )
 }
 
 export default Page
