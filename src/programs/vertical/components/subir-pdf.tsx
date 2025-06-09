@@ -6,6 +6,7 @@ import { useAtom } from 'jotai'
 import { FileText, Trash2, Upload } from 'lucide-react'
 import { pdfAtom } from '../store/pdf'
 import { pdfStateAtom } from '../store/pdf/input_pdf'
+import { useDropzone } from 'react-dropzone'
 
 interface Signature {
   id: string
@@ -31,8 +32,8 @@ interface PDFFile {
 export default function SubirPdf() {
   const [pdfState, setPdfState] = useAtom(pdfStateAtom)
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const onDrop = (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
     if (!file) return
 
     // Crear URL para previsualización
@@ -51,6 +52,14 @@ export default function SubirPdf() {
     })
   }
 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+    },
+    maxFiles: 1,
+  })
+
   return (
     <Card>
       <CardHeader>
@@ -62,22 +71,24 @@ export default function SubirPdf() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!pdfState ? (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+        {!pdfState?.file ? (
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+              ${
+                isDragActive
+                  ? 'border-blue-400 bg-blue-50'
+                  : 'border-gray-300 hover:border-blue-400'
+              }`}
+          >
+            <input {...getInputProps()} />
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
-              Arrastra tu PDF aquí o haz clic para seleccionar
+              {isDragActive
+                ? 'Suelta el archivo aquí...'
+                : 'Arrastra tu PDF aquí o haz clic para seleccionar'}
             </p>
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="pdf-upload"
-            />
-            <label htmlFor="pdf-upload">
-              <Button className="cursor-pointer">Seleccionar PDF</Button>
-            </label>
+            <Button type="button">Seleccionar PDF</Button>
           </div>
         ) : (
           <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -86,20 +97,18 @@ export default function SubirPdf() {
               <div>
                 <p className="font-medium text-green-900">{pdfState.name}</p>
                 <p className="text-sm text-green-700">
-                  {pdfState.size} • {pdfState.pageCount} páginas
+                  {(pdfState.size / 1024 / 1024).toFixed(2)} MB
+                  {pdfState.pageCount && ` • ${pdfState.pageCount} páginas`}
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  document.getElementById('pdf-upload-change')?.click()
-                }
-              >
-                Cambiar
-              </Button>
+              <div {...getRootProps()}>
+                <input {...getInputProps()} />
+                <Button variant="outline" size="sm">
+                  Cambiar
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -119,13 +128,6 @@ export default function SubirPdf() {
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="pdf-upload-change"
-            />
           </div>
         )}
       </CardContent>

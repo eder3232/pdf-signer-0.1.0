@@ -25,6 +25,7 @@ import {
   X,
   Check,
 } from 'lucide-react'
+import SubirPdf from './components/subir-pdf'
 
 interface Signature {
   id: string
@@ -149,6 +150,8 @@ export default function ModoVerticalPage() {
           {/* Columna Izquierda - Panel de Control */}
           <div className="space-y-6">
             {/* Etapa 1: Subida de PDF */}
+
+            <SubirPdf />
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

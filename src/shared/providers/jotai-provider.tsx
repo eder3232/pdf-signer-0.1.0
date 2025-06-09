@@ -1,3 +1,5 @@
+'use client'
+
 import { createStore, Provider } from 'jotai'
 
 const myStore = createStore()
