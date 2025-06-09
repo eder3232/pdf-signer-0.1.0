@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAtom } from 'jotai'
 import { FileText, Trash2, Upload } from 'lucide-react'
 import { pdfAtom } from '../store/pdf'
+import { pdfStateAtom } from '../store/pdf/input_pdf'
 
 interface Signature {
   id: string
@@ -28,7 +29,27 @@ interface PDFFile {
 }
 
 export default function SubirPdf() {
-  const [pdfFile, setPdfFile] = useAtom(pdfAtom)
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom)
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Crear URL para previsualización
+    const fileUrl = URL.createObjectURL(file)
+
+    // Actualizar el estado del PDF
+    setPdfState({
+      file: file,
+      url: fileUrl,
+      name: file.name,
+      size: file.size,
+      pageCount: null, // Se actualizará después con pdf.js
+      loaded: false,
+      error: null,
+      uploadDate: new Date(),
+    })
+  }
 
   return (
     <Card>
@@ -41,7 +62,7 @@ export default function SubirPdf() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!pdfFile ? (
+        {!pdfState ? (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
@@ -63,9 +84,9 @@ export default function SubirPdf() {
             <div className="flex items-center gap-3">
               <FileText className="w-8 h-8 text-green-600" />
               <div>
-                <p className="font-medium text-green-900">{pdfFile.name}</p>
+                <p className="font-medium text-green-900">{pdfState.name}</p>
                 <p className="text-sm text-green-700">
-                  {pdfFile.size} • {pdfFile.pages} páginas
+                  {pdfState.size} • {pdfState.pageCount} páginas
                 </p>
               </div>
             </div>
@@ -82,7 +103,18 @@ export default function SubirPdf() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPdfFile(null)}
+                onClick={() =>
+                  setPdfState({
+                    file: null,
+                    url: null,
+                    name: '',
+                    size: 0,
+                    pageCount: null,
+                    loaded: false,
+                    error: null,
+                    uploadDate: null,
+                  })
+                }
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
