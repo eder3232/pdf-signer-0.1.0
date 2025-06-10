@@ -1,155 +1,150 @@
-'use client'
+"use client";
 
-import { useAtom, useAtomValue } from 'jotai'
-import { useRef, useState } from 'react'
-import { motion, useDragControls } from 'framer-motion'
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
+import { motion, useDragControls } from "framer-motion";
+import { useAtom, useAtomValue } from "jotai";
 import {
-  Slider,
-  SliderTrack,
-  SliderRange,
-  SliderThumb,
-} from '@/components/ui/slider'
-import {
-  Move,
-  RotateCcw,
   Maximize2,
   Minimize2,
+  Move,
+  RotateCcw,
   Trash2,
   Undo,
-} from 'lucide-react'
+} from "lucide-react";
+import { useRef, useState } from "react";
 import {
-  signatureConfigPrimitiveAtom,
-  updateTransformAtom,
   resetTransformAtom,
   setDraggingAtom,
   setResizingAtom,
   setRotatingAtom,
+  signatureConfigPrimitiveAtom,
   transformStyleAtom,
-} from '../../store/pdf/signature_config'
+  updateTransformAtom,
+} from "../../store/pdf/signature_config";
 import {
-  appliedSignaturesPrimitiveAtom,
   appliedSignaturesActionsAtom,
-} from '../../store/signatures/applied_signatures'
+  appliedSignaturesPrimitiveAtom,
+} from "../../store/signatures/applied_signatures";
 
 export default function SignatureConfigurator() {
   // Referencias y estado local
-  const containerRef = useRef<HTMLDivElement>(null)
-  const dragControls = useDragControls()
-  const [isDragging, setIsDragging] = useState(false)
-  const [startRotation, setStartRotation] = useState(0)
-  const [startScale, setStartScale] = useState(100)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
+  const [isDragging, setIsDragging] = useState(false);
+  const [startRotation, setStartRotation] = useState(0);
+  const [startScale, setStartScale] = useState(100);
 
   // Átomos
-  const [config] = useAtom(signatureConfigPrimitiveAtom)
-  const transformStyle = useAtomValue(transformStyleAtom)
-  const [appliedSignatures] = useAtom(appliedSignaturesPrimitiveAtom)
-  const [, dispatchSignatureAction] = useAtom(appliedSignaturesActionsAtom)
+  const [config] = useAtom(signatureConfigPrimitiveAtom);
+  const transformStyle = useAtomValue(transformStyleAtom);
+  const [appliedSignatures] = useAtom(appliedSignaturesPrimitiveAtom);
+  const [, dispatchSignatureAction] = useAtom(appliedSignaturesActionsAtom);
 
-  const [, updateTransform] = useAtom(updateTransformAtom)
-  const [, resetTransform] = useAtom(resetTransformAtom)
-  const [, setDragging] = useAtom(setDraggingAtom)
-  const [, setResizing] = useAtom(setResizingAtom)
-  const [, setRotating] = useAtom(setRotatingAtom)
+  const [, updateTransform] = useAtom(updateTransformAtom);
+  const [, resetTransform] = useAtom(resetTransformAtom);
+  const [, setDragging] = useAtom(setDraggingAtom);
+  const [, setResizing] = useAtom(setResizingAtom);
+  const [, setRotating] = useAtom(setRotatingAtom);
 
   // Obtener la firma activa
   const activeSignature = appliedSignatures.signatures.find(
-    (sig) => sig.id === appliedSignatures.activeSignatureId
-  )
+    (sig) => sig.id === appliedSignatures.activeSignatureId,
+  );
 
-  if (!activeSignature) return null
+  if (!activeSignature) return null;
 
   // Handlers para transformaciones
   const handleDragStart = () => {
-    setIsDragging(true)
-    setDragging(true)
-  }
+    setIsDragging(true);
+    setDragging(true);
+  };
 
   const handleDragEnd = () => {
-    setIsDragging(false)
-    setDragging(false)
-  }
+    setIsDragging(false);
+    setDragging(false);
+  };
 
   const handleRotateStart = (e: React.PointerEvent) => {
-    setStartRotation(config.transform.rotation)
-    setRotating(true)
+    setStartRotation(config.transform.rotation);
+    setRotating(true);
 
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
     const startAngle =
-      Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI)
+      Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
 
     const handleRotateMove = (e: PointerEvent) => {
       const angle =
-        Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI)
+        Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
 
-      const rotation = startRotation + (angle - startAngle)
-      updateTransform({ rotation })
-    }
+      const rotation = startRotation + (angle - startAngle);
+      updateTransform({ rotation });
+    };
 
     const handleRotateEnd = () => {
-      setRotating(false)
-      window.removeEventListener('pointermove', handleRotateMove)
-      window.removeEventListener('pointerup', handleRotateEnd)
-    }
+      setRotating(false);
+      window.removeEventListener("pointermove", handleRotateMove);
+      window.removeEventListener("pointerup", handleRotateEnd);
+    };
 
-    window.addEventListener('pointermove', handleRotateMove)
-    window.addEventListener('pointerup', handleRotateEnd)
-  }
+    window.addEventListener("pointermove", handleRotateMove);
+    window.addEventListener("pointerup", handleRotateEnd);
+  };
 
   const handleScaleStart = (e: React.PointerEvent) => {
-    setStartScale(config.transform.scale)
-    setResizing(true)
+    setStartScale(config.transform.scale);
+    setResizing(true);
 
-    const startY = e.clientY
+    const startY = e.clientY;
 
     const handleScaleMove = (e: PointerEvent) => {
-      const deltaY = startY - e.clientY
-      const scale = Math.max(10, Math.min(200, startScale + deltaY))
-      updateTransform({ scale })
-    }
+      const deltaY = startY - e.clientY;
+      const scale = Math.max(10, Math.min(200, startScale + deltaY));
+      updateTransform({ scale });
+    };
 
     const handleScaleEnd = () => {
-      setResizing(false)
-      window.removeEventListener('pointermove', handleScaleMove)
-      window.removeEventListener('pointerup', handleScaleEnd)
-    }
+      setResizing(false);
+      window.removeEventListener("pointermove", handleScaleMove);
+      window.removeEventListener("pointerup", handleScaleEnd);
+    };
 
-    window.addEventListener('pointermove', handleScaleMove)
-    window.addEventListener('pointerup', handleScaleEnd)
-  }
+    window.addEventListener("pointermove", handleScaleMove);
+    window.addEventListener("pointerup", handleScaleEnd);
+  };
 
   const handleOpacityChange = (value: number) => {
-    updateTransform({ opacity: value })
-  }
+    updateTransform({ opacity: value });
+  };
 
   const handleReset = () => {
-    resetTransform()
-  }
+    resetTransform();
+  };
 
   const handleRemove = () => {
     dispatchSignatureAction({
-      type: 'REMOVE',
+      type: "REMOVE",
       payload: activeSignature.id,
-    })
-  }
+    });
+  };
 
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
+      className="pointer-events-none absolute inset-0"
       style={{
         ...transformStyle,
-        touchAction: 'none',
+        touchAction: "none",
       }}
     >
       {/* Firma */}
@@ -162,14 +157,14 @@ export default function SignatureConfigurator() {
         onDragEnd={handleDragEnd}
       >
         <img
-          src={activeSignature.sourceSignature.data || ''}
+          src={activeSignature.sourceSignature.data || ""}
           alt="Firma"
-          className="max-w-full h-auto select-none"
+          className="h-auto max-w-full select-none"
           draggable={false}
         />
 
         {/* Controles de transformación */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-auto">
+        <div className="pointer-events-auto absolute -top-12 left-1/2 flex -translate-x-1/2 items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -179,7 +174,7 @@ export default function SignatureConfigurator() {
                   className="h-8 w-8 p-0"
                   onClick={handleReset}
                 >
-                  <Undo className="w-4 h-4" />
+                  <Undo className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -188,8 +183,8 @@ export default function SignatureConfigurator() {
             </Tooltip>
           </TooltipProvider>
 
-          <div className="bg-white rounded-lg shadow-lg p-2 flex items-center gap-2">
-            <Move className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-lg">
+            <Move className="h-4 w-4 text-gray-400" />
             <Slider
               value={[config.transform.opacity]}
               onValueChange={([value]) => handleOpacityChange(value)}
@@ -209,7 +204,7 @@ export default function SignatureConfigurator() {
                   className="h-8 w-8 p-0"
                   onClick={handleRemove}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -221,24 +216,24 @@ export default function SignatureConfigurator() {
 
         {/* Control de rotación */}
         <div
-          className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 cursor-pointer pointer-events-auto"
+          className="pointer-events-auto absolute -top-4 left-1/2 h-8 w-8 -translate-x-1/2 cursor-pointer"
           onPointerDown={handleRotateStart}
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="h-4 w-4" />
         </div>
 
         {/* Control de escala */}
         <div
-          className="absolute -bottom-4 right-0 translate-x-1/2 w-8 h-8 cursor-pointer pointer-events-auto"
+          className="pointer-events-auto absolute right-0 -bottom-4 h-8 w-8 translate-x-1/2 cursor-pointer"
           onPointerDown={handleScaleStart}
         >
           {config.transform.scale > 100 ? (
-            <Minimize2 className="w-4 h-4" />
+            <Minimize2 className="h-4 w-4" />
           ) : (
-            <Maximize2 className="w-4 h-4" />
+            <Maximize2 className="h-4 w-4" />
           )}
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

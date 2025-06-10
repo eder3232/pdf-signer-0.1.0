@@ -1,48 +1,48 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Settings, X, Check } from 'lucide-react'
-import { useAtom } from 'jotai'
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Settings, X, Check } from "lucide-react";
+import { useAtom } from "jotai";
 import {
   appliedSignaturesPrimitiveAtom,
   appliedSignaturesActionsAtom,
-} from '../store/signatures/applied_signatures'
+} from "../store/signatures/applied_signatures";
 
 export default function FirmasAplicadas() {
-  const [appliedSignaturesState] = useAtom(appliedSignaturesPrimitiveAtom)
-  const [, setAppliedActions] = useAtom(appliedSignaturesActionsAtom)
+  const [appliedSignaturesState] = useAtom(appliedSignaturesPrimitiveAtom);
+  const [, setAppliedActions] = useAtom(appliedSignaturesActionsAtom);
 
-  const { signatures, activeSignatureId } = appliedSignaturesState
+  const { signatures, activeSignatureId } = appliedSignaturesState;
 
   const handleSetActive = (id: string) => {
     setAppliedActions({
-      type: 'SET_ACTIVE',
+      type: "SET_ACTIVE",
       payload: id,
-    })
-  }
+    });
+  };
 
   const handleRemoveSignature = (id: string) => {
     setAppliedActions({
-      type: 'REMOVE',
+      type: "REMOVE",
       payload: id,
-    })
-  }
+    });
+  };
 
-  if (signatures.length === 0) return null
+  if (signatures.length === 0) return null;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
             3
           </div>
           Firmas aplicadas
@@ -56,25 +56,25 @@ export default function FirmasAplicadas() {
           {signatures.map((signature) => (
             <div
               key={signature.id}
-              className="flex items-center justify-between p-3 border rounded-lg"
+              className="flex items-center justify-between rounded-lg border p-3"
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={signature.sourceSignature.data}
+                  src={signature.sourceSignature.data ?? ""}
                   alt={signature.sourceSignature.alias}
-                  className="w-12 h-6 object-contain border rounded"
+                  className="h-6 w-12 rounded border object-contain"
                 />
                 <div>
                   <span className="font-medium">
                     {signature.sourceSignature.alias}
                   </span>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     {signature.isConfigured ? (
                       <Badge
                         variant="default"
                         className="bg-green-100 text-green-800"
                       >
-                        <Check className="w-3 h-3 mr-1" />
+                        <Check className="mr-1 h-3 w-3" />
                         Configurada
                       </Badge>
                     ) : (
@@ -87,11 +87,11 @@ export default function FirmasAplicadas() {
                 <Button
                   size="sm"
                   variant={
-                    activeSignatureId === signature.id ? 'default' : 'outline'
+                    activeSignatureId === signature.id ? "default" : "outline"
                   }
                   onClick={() => handleSetActive(signature.id)}
                 >
-                  <Settings className="w-4 h-4 mr-1" />
+                  <Settings className="mr-1 h-4 w-4" />
                   Configurar
                 </Button>
                 <Button
@@ -99,7 +99,7 @@ export default function FirmasAplicadas() {
                   size="sm"
                   onClick={() => handleRemoveSignature(signature.id)}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -107,5 +107,5 @@ export default function FirmasAplicadas() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
