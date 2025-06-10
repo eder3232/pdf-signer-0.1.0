@@ -26,6 +26,10 @@ import {
   Check,
 } from 'lucide-react'
 import SubirPdf from './components/subir-pdf'
+import { useAtom } from 'jotai'
+import { pdfStateAtom } from './store/pdf/input_pdf'
+import GaleriaFirmas from './components/galeria-firmas'
+import { SignatureState } from './store/signatures/input_signature'
 
 interface Signature {
   id: string
@@ -49,7 +53,7 @@ interface PDFFile {
 }
 
 export default function ModoVerticalPage() {
-  const [pdfFile, setPdfFile] = useState<PDFFile | null>(null)
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom)
   const [availableSignatures, setAvailableSignatures] = useState<Signature[]>(
     []
   )
@@ -87,10 +91,15 @@ export default function ModoVerticalPage() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      setPdfFile({
+      setPdfState({
+        file: file,
+        url: URL.createObjectURL(file),
         name: file.name,
-        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        pages: Math.floor(Math.random() * 20) + 5, // Simular páginas
+        size: file.size,
+        pageCount: Math.floor(Math.random() * 20) + 5, // Simular páginas
+        loaded: false,
+        error: null,
+        uploadDate: new Date(),
       })
     }
   }
@@ -152,7 +161,7 @@ export default function ModoVerticalPage() {
             {/* Etapa 1: Subida de PDF */}
 
             <SubirPdf />
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
@@ -222,60 +231,65 @@ export default function ModoVerticalPage() {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Etapa 2: Galería de firmas (solo si hay PDF) */}
-            {pdfFile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      2
-                    </div>
-                    Galería de firmas
-                  </CardTitle>
-                  <CardDescription>
-                    Selecciona las firmas que deseas aplicar al documento
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-3">
-                    {availableSignatures.map((signature) => (
-                      <div
-                        key={signature.id}
-                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={signature.imageUrl || '/placeholder.svg'}
-                            alt={signature.name}
-                            className="w-16 h-8 object-contain border rounded"
-                          />
-                          <span className="font-medium">{signature.name}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => addSignatureToDocument(signature)}
-                            disabled={appliedSignatures.some(
-                              (sig) => sig.id === signature.id
-                            )}
-                          >
-                            {appliedSignatures.some(
-                              (sig) => sig.id === signature.id
-                            )
-                              ? 'Agregada'
-                              : 'Usar en documento'}
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+            {pdfState.file && (
+              <div>
+                <GaleriaFirmas />
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        2
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      Galería de firmas
+                    </CardTitle>
+                    <CardDescription>
+                      Selecciona las firmas que deseas aplicar al documento
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-3">
+                      {availableSignatures.map((signature) => (
+                        <div
+                          key={signature.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={signature.imageUrl || '/placeholder.svg'}
+                              alt={signature.name}
+                              className="w-16 h-8 object-contain border rounded"
+                            />
+                            <span className="font-medium">
+                              {signature.name}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => addSignatureToDocument(signature)}
+                              disabled={appliedSignatures.some(
+                                (sig) => sig.id === signature.id
+                              )}
+                            >
+                              {appliedSignatures.some(
+                                (sig) => sig.id === signature.id
+                              )
+                                ? 'Agregada'
+                                : 'Usar en documento'}
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Etapa 3: Firmas aplicadas (solo si hay firmas seleccionadas) */}
@@ -490,7 +504,7 @@ export default function ModoVerticalPage() {
 
           {/* Columna Derecha - Previsualización */}
           <div className="space-y-4">
-            {pdfFile ? (
+            {pdfState ? (
               <Card className="h-fit">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -569,7 +583,7 @@ export default function ModoVerticalPage() {
                     ))}
                   </div>
 
-                  {pdfFile.pages > 1 && (
+                  {pdfState.pageCount && pdfState.pageCount > 1 && (
                     <div className="flex items-center justify-center gap-4 mt-4">
                       <Button
                         variant="outline"
@@ -580,12 +594,12 @@ export default function ModoVerticalPage() {
                         Anterior
                       </Button>
                       <span className="text-sm">
-                        Página {currentPage} de {pdfFile.pages}
+                        Página {currentPage} de {pdfState.pageCount}
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={currentPage === pdfFile.pages}
+                        disabled={currentPage === pdfState.pageCount}
                         onClick={() => setCurrentPage(currentPage + 1)}
                       >
                         Siguiente
